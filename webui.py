@@ -160,16 +160,17 @@ def bot_audio(history):
                     
 
 
-def bot_txt(history):    
-    response = history[-1][1]
-    yield history
-    """
-    history[-1][1] = ""
-    for character in response:
-        history[-1][1] += character
-        time.sleep(0.01)
-        yield history
-    """
+def bot_txt(history):
+    if history[-1][0].startswith("/image"):        
+        return history
+    else:
+        response = history[-1][1]
+        history[-1][1] = ""        
+        for character in response:
+            history[-1][1] += character
+            time.sleep(0.01)
+            yield history
+
 
 
 # Define Gradio Blocks interface
@@ -186,9 +187,9 @@ with gr.Blocks() as demo:
 
     chat_input = gr.MultimodalTextbox(interactive=True, file_types=["image"], placeholder="Enter message or upload file...", show_label=False)
     chat_msg = chat_input.submit(add_message, [chatbot, chat_input], [chatbot, chat_input])
-    bot_audio = chat_msg.then(bot_audio, [chatbot], [chatbot, html], api_name="bot_voice")
+    bot_msg = chat_msg.then(bot_audio, [chatbot], [chatbot, html], api_name="bot_response")
     #bot_msg = bot_audio.then(bot_txt, chatbot, chatbot, api_name="bot_response")
-    #bot_msg.then(lambda: gr.MultimodalTextbox(interactive=True), None, [chat_input])
+    bot_msg.then(lambda: gr.MultimodalTextbox(interactive=True), None, [chat_input])
 
     audio_input = gr.Microphone(type="filepath", interactive="True", label="Speak to Transcribe")
     audio_msg = audio_input.stop_recording(add_audio_message, [audio_input], [chat_input])
